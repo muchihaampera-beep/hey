@@ -1,0 +1,750 @@
+
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HEY EDUKASI</title>
+<style>
+:root{--bg:#0b1020;--p:#151d33;--line:#293653;--blue:#6685ff;--purple:#a56bff;--text:#f5f7ff;--muted:#a4b1d0;--good:#58d6a4;--bad:#ff7f91}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 Arial,sans-serif}
+header{position:sticky;top:0;background:#10172af5;padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);z-index:5}
+.logo{font-weight:900;font-size:21px}.logo span{color:#a6a8ff}
+main{max-width:950px;margin:auto;padding:16px 13px 80px}
+h1,h2,h3{line-height:1.25}
+.hero{padding:25px;border-radius:22px;background:linear-gradient(130deg,#293d88,#633fa5,#7847a9);margin:8px 0 20px}
+.hero h1{font-size:clamp(30px,6vw,46px);margin:12px 0}
+.muted,.note{color:var(--muted);font-size:13px}
+button{border:0;border-radius:11px;padding:11px 14px;background:#293653;color:white;font-weight:bold;cursor:pointer;margin:3px}
+button:active{transform:scale(.98)}
+.primary{background:linear-gradient(100deg,var(--blue),var(--purple))}
+input,select{width:100%;padding:12px;border:1px solid #394968;border-radius:11px;background:#0b1325;color:white;margin:7px 0}
+.card{background:var(--p);border:1px solid var(--line);border-radius:16px;padding:16px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{background:var(--p);color:white;border:1px solid var(--line);padding:15px;border-radius:14px;text-align:left}
+.tile b{display:block;margin-bottom:4px}
+.hidden{display:none!important}
+.topic{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%;margin:5px 0}
+.steps{display:grid;gap:9px;margin:15px 0}
+.step{display:flex;gap:10px;background:#10182c;padding:12px;border-radius:12px;border:1px solid var(--line)}
+.num{background:linear-gradient(130deg,var(--blue),var(--purple));border-radius:9px;min-width:29px;height:29px;text-align:center;padding:3px;font-weight:bold}
+.example,.answer{padding:13px;border-radius:12px;margin:10px 0;background:#10182c;border:1px solid var(--line)}
+.answer{background:#12302b;border-color:#315c58}
+.option{display:block;width:100%;text-align:left;margin:7px 0;background:#202b47;border:1px solid #364665}
+.option.correct{border-color:var(--good);background:#14352e}
+.option.wrong{border-color:var(--bad);background:#3a202d}
+.feedback{background:#0c1426;padding:12px;border-radius:11px;margin-top:10px}
+.progress{height:7px;background:#293653;border-radius:20px;overflow:hidden}
+.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--purple))}
+.stat{background:var(--p);padding:12px;border-radius:12px;border:1px solid var(--line)}
+footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:430px){.grid{grid-template-columns:1fr}.hero{padding:21px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">HEY <span>EDUKASI.</span><div class="muted">BELAJAR • BERLATIH • BERKEMBANG</div></div>
+  <button onclick="home()">⌂ Beranda</button>
+</header>
+<main>
+<section id="home">
+  <div class="hero">
+    <div>✦ TEMAN BELAJAR SEMUA JENJANG</div>
+    <h1>Belajar pelan-pelan,<br>jadi makin paham.</h1>
+    <p>Materi sederhana, contoh soal, cara mengerjakan, latihan, dan Tes IQ/logika.</p>
+    <button class="primary" onclick="document.getElementById('levels').scrollIntoView({behavior:'smooth'})">Mulai belajar →</button>
+    <button onclick="openIQ()">🧠 Tes IQ & Logika</button>
+  </div>
+  <div class="card">
+    <h2>📈 Progres belajarmu</h2>
+    <div class="grid">
+      <div class="stat"><b id="doneCount">0</b><div class="muted">Materi selesai</div></div>
+      <div class="stat"><b id="rightCount">0</b><div class="muted">Jawaban benar</div></div>
+      <div class="stat"><b id="iqCount">—</b><div class="muted">Skor tes terakhir</div></div>
+    </div>
+    <button onclick="resetProgress()">Reset progres</button>
+  </div>
+  <section id="levels" class="card">
+    <h2>📚 Pilih jenjang</h2>
+    <div class="grid" id="levelGrid"></div>
+  </section>
+  <section class="card">
+    <h2>🔎 Cari materi</h2>
+    <input id="search" placeholder="Contoh: pecahan, ide pokok, fotosintesis">
+    <button class="primary" onclick="searchLesson()">Cari materi</button>
+    <div id="searchResults"></div>
+  </section>
+  <section class="card">
+    <h2>🎵 Musik belajar</h2>
+    <p class="muted">Pilih file audio dari HP.</p>
+    <input type="file" id="audioFile" accept="audio/*">
+    <audio id="audio" controls class="hidden" style="width:100%"></audio>
+  </section>
+</section>
+
+<section id="browse" class="hidden">
+  <button onclick="home()">← Beranda</button>
+  <h2 id="browseTitle"></h2>
+  <p class="muted" id="browseDesc"></p>
+  <div class="grid" id="subjectGrid"></div>
+</section>
+
+<section id="topics" class="hidden">
+  <button onclick="backBrowse()">← Kembali</button>
+  <h2 id="topicTitle"></h2>
+  <div id="topicGrid"></div>
+</section>
+
+<section id="lesson" class="hidden">
+  <button onclick="backTopics()">← Daftar materi</button>
+  <article class="card">
+    <div class="muted" id="lessonLabel"></div>
+    <h2 id="lessonTitle"></h2>
+    <p id="intro"></p>
+    <div class="example"><b>💡 Contoh sederhana</b><p id="example"></p></div>
+    <h3>🪜 Cara mengerjakan</h3>
+    <div class="steps" id="steps"></div>
+    <div class="answer"><b>Ingat!</b><p id="remember"></p></div>
+    <div class="card">
+      <div class="muted">COBA SENDIRI</div>
+      <h3 id="practiceQuestion"></h3>
+      <div id="practiceOptions"></div>
+      <div class="feedback hidden" id="practiceFeedback"></div>
+      <button class="primary hidden" id="retry" onclick="openLesson(currentTopic)">Coba lagi</button>
+    </div>
+    <button class="primary" onclick="markDone()">✓ Tandai materi selesai</button>
+  </article>
+</section>
+
+<section id="iq" class="hidden">
+  <button onclick="home()">← Beranda</button>
+  <div class="card">
+    <div class="muted">🧠 ASAH OTAK</div>
+    <h2>Tes IQ & Logika</h2>
+    <p class="muted">Ini latihan logika, bukan pengukuran IQ resmi.</p>
+    <div id="iqStart">
+      <p>10 soal pola angka, urutan, dan penalaran. Pilih jawaban yang menurutmu tepat.</p>
+      <button class="primary" onclick="startIQ()">Mulai tes →</button>
+    </div>
+    <div id="iqQuiz" class="hidden"></div>
+    <div id="iqResult" class="hidden"></div>
+  </div>
+</section>
+</main>
+<footer>© 2026 HEY EDUKASI · Belajar sedikit demi sedikit.</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const levels=[
+ {name:"SD/MI",icon:"🎒",classes:[1,2,3,4,5,6]},
+ {name:"SMP/MTs",icon:"📘",classes:[7,8,9]},
+ {name:"SMA/MA",icon:"🎓",classes:[10,11,12]},
+ {name:"SMK",icon:"💻",classes:[10,11,12]}
+];
+const subjects={
+ "SD/MI":["Matematika","Bahasa Indonesia","IPAS","Pendidikan Pancasila","Pendidikan Agama","PJOK","Seni Budaya","Bahasa Inggris","Informatika"],
+ "SMP/MTs":["Matematika","Bahasa Indonesia","IPA","IPS","Bahasa Inggris","Pendidikan Pancasila","Pendidikan Agama","Informatika","PJOK"],
+ "SMA/MA":["Matematika","Bahasa Indonesia","Bahasa Inggris","Sejarah","Fisika","Kimia","Biologi","Ekonomi","Geografi","Sosiologi","Informatika"],
+ "SMK":["Matematika","Bahasa Indonesia","Bahasa Inggris","Informatika","Dasar Kejuruan","PPLG/RPL","TJKT/TKJ","DKV","Akuntansi","Otomotif","Perhotelan"]
+};
+const topicSets={
+ "Matematika":["Bilangan bulat","Operasi hitung","Pecahan","Desimal dan persen","FPB dan KPK","Perbandingan","Skala peta","Pengukuran waktu","Kecepatan","Keliling dan luas","Volume bangun ruang","Data dan diagram"],
+ "Bahasa Indonesia":["Ide pokok","Informasi penting","Simpulan bacaan","Makna kata","Kalimat utama","Fakta dan opini","Urutan peristiwa","Tujuan teks","Kalimat efektif"],
+ "IPAS":["Makhluk hidup","Fotosintesis","Rantai makanan","Ekosistem","Gaya dan gerak","Energi","Siklus air","Lingkungan"],
+ "IPA":["Makhluk hidup","Fotosintesis","Rantai makanan","Gaya dan gerak","Energi","Sistem tubuh manusia","Zat dan perubahannya"],
+ "IPS":["Peta dan wilayah","Kegiatan ekonomi","Interaksi sosial","Sejarah Indonesia","Kebutuhan manusia"],
+ "Pendidikan Pancasila":["Pancasila","Hak dan kewajiban","Aturan bersama","Gotong royong"],
+ "Pendidikan Agama":["Perilaku baik","Kejujuran","Tanggung jawab","Menghormati sesama"],
+ "PJOK":["Kebugaran jasmani","Permainan bola","Pola hidup sehat"],
+ "Seni Budaya":["Unsur seni rupa","Warna","Irama dan musik"],
+ "Bahasa Inggris":["Kosakata sehari-hari","Perkenalan diri","Simple present tense"],
+ "Informatika":["Berpikir komputasional","Algoritma sederhana","Keamanan digital"],
+ "Sejarah":["Peristiwa sejarah Indonesia","Kronologi sejarah"],
+ "Fisika":["Gaya dan gerak","Energi","Pengukuran"],
+ "Kimia":["Unsur dan senyawa","Perubahan zat"],
+ "Biologi":["Sel dan makhluk hidup","Ekosistem"],
+ "Ekonomi":["Kebutuhan dan keinginan","Kegiatan ekonomi"],
+ "Geografi":["Peta dan wilayah","Lingkungan"],
+ "Sosiologi":["Interaksi sosial","Kelompok masyarakat"],
+ "Dasar Kejuruan":["Keselamatan kerja","Pengenalan dunia kerja"],
+ "PPLG/RPL":["Logika pemrograman","Algoritma sederhana"],
+ "TJKT/TKJ":["Jaringan komputer","Perangkat jaringan"],
+ "DKV":["Warna dan desain","Komposisi visual"],
+ "Akuntansi":["Pemasukan dan pengeluaran","Pencatatan sederhana"],
+ "Otomotif":["Bagian kendaraan","Keselamatan berkendara"],
+ "Perhotelan":["Pelayanan pelanggan","Komunikasi kerja"]
+};
+let state={level:"SD/MI",grade:6,subject:"Matematika",done:[],right:0,iq:0,iqIndex:0,iqScore:0};
+let currentTopic="";
+try{const saved=JSON.parse(localStorage.getItem("heyEdukasiProgress")||"{}");state.done=saved.done||[];state.right=saved.right||0;state.iq=saved.iq||0}catch(e){}
+function save(){localStorage.setItem("heyEdukasiProgress",JSON.stringify({done:state.done,right:state.right,iq:state.iq}));renderStats()}
+function renderStats(){$("doneCount").textContent=state.done.length;$("rightCount").textContent=state.right;$("iqCount").textContent=state.iq||"—"}
+function hide(){["home","browse","topics","lesson","iq"].forEach(id=>$(id).classList.add("hidden"))}
+function home(){hide();$("home").classList.remove("hidden");window.scrollTo(0,0);renderStats()}
+function renderLevels(){$("levelGrid").innerHTML=levels.map(l=>`<button class="tile" onclick="chooseLevel('${l.name}')"><span style="font-size:26px">${l.icon}</span><b>${l.name}</b><span class="muted">Kelas ${l.classes.join(", ")}</span></button>`).join("")}
+function chooseLevel(name){state.level=name;hide();$("browse").classList.remove("hidden");$("browseTitle").textContent="Pilih kelas "+name;$("browseDesc").textContent="Pilih kelas yang ingin kamu pelajari.";let list=levels.find(l=>l.name===name).classes;$("subjectGrid").innerHTML=list.map(n=>`<button class="tile" onclick="chooseClass(${n})"><b>Kelas ${n}</b><span class="muted">Lihat mata pelajaran →</span></button>`).join("");window.scrollTo(0,0)}
+function chooseClass(n){state.grade=n;$("browseTitle").textContent=`Kelas ${n} — ${state.level}`;$("browseDesc").textContent="Pilih mata pelajaran untuk melihat topik.";const list=subjects[state.level]||subjects["SD/MI"];$("subjectGrid").innerHTML=list.map((s,i)=>`<button class="tile" onclick="chooseSubject(${JSON.stringify(s).replace(/"/g,'&quot;')})"><b>${["📘","🔢","🧪","🌱","✍️","📐"][i%6]} ${s}</b><span class="muted">Materi dan latihan soal</span></button>`).join("");}
+function chooseSubject(s){state.subject=s;hide();$("topics").classList.remove("hidden");$("topicTitle").textContent=`${s} — Kelas ${state.grade}`;const list=topicSets[s]||["Pengenalan dasar","Konsep penting","Contoh sehari-hari","Latihan pemahaman"];$("topicGrid").innerHTML=list.map(t=>`<button class="topic" onclick="openLesson(${JSON.stringify(t).replace(/"/g,'&quot;')})">${t}<span>→</span></button>`).join("");window.scrollTo(0,0)}
+function backBrowse(){chooseLevel(state.level);chooseClass(state.grade)}
+function backTopics(){chooseSubject(state.subject)}
+function lessonData(t){
+ if(/pecahan/i.test(t))return{
+ intro:"Pecahan menunjukkan sebagian dari sesuatu yang dibagi sama besar. Angka atas disebut pembilang, angka bawah disebut penyebut.",
+ example:"Bayangkan satu pizza dipotong menjadi 4 bagian sama besar. Kamu mengambil 1 potong, berarti kamu mengambil 1/4 pizza.",
+ steps:[["Baca soalnya","Cari tahu pecahan apa yang harus dihitung."],["Periksa penyebut","Kalau penyebut sama, angka atas bisa langsung dijumlahkan atau dikurangkan."],["Hitung pembilang","Contoh: 2/5 + 1/5. Hitung 2 + 1 = 3."],["Tulis hasil","Angka bawah tetap 5. Jadi hasilnya 3/5."]],
+ remember:"Untuk tambah atau kurang pecahan, samakan penyebut terlebih dahulu. Kalau penyebut sudah sama, hitung pembilangnya.",
+ q:"Hasil dari 2/5 + 1/5 adalah ...",opts:["3/10","3/5","2/5","1/5"],c:1,why:"Penyebutnya sama-sama 5. Jumlahkan pembilang: 2 + 1 = 3. Hasilnya 3/5."
+ };
+ if(/ide pokok|kalimat utama|simpulan|informasi penting/i.test(t))return{
+ intro:"Ide pokok adalah gagasan utama yang dibicarakan dalam paragraf. Kalimat lain biasanya memberi penjelasan atau contoh.",
+ example:"“Rani merawat tanaman setiap pagi. Ia menyiram bunga dan mencabut rumput liar.” Gagasan utamanya adalah Rani merawat tanaman.",
+ steps:[["Baca seluruh paragraf","Jangan langsung memilih kalimat pertama."],["Cari hal yang sering dibicarakan","Perhatikan siapa atau apa yang menjadi fokus paragraf."],["Ringkas dengan kata sendiri","Sebutkan inti paragraf tanpa detail kecil."],["Cocokkan pilihan","Pilih jawaban yang mencakup isi paragraf secara keseluruhan."]],
+ remember:"Ide pokok membahas inti paragraf, bukan hanya satu detail kecil.",
+ q:"Budi selalu sarapan sebelum sekolah. Ia makan nasi atau roti agar punya tenaga untuk belajar. Ide pokoknya adalah ...",
+ opts:["Budi suka roti saja","Budi sarapan sebelum sekolah","Budi pergi berbelanja","Budi tidur di sekolah"],c:1,why:"Kedua kalimat menjelaskan kebiasaan Budi sarapan sebelum berangkat sekolah."
+ };
+ if(/fakta dan opini/i.test(t))return{
+ intro:"Fakta adalah sesuatu yang dapat dibuktikan. Opini adalah pendapat atau penilaian seseorang.",
+ example:"“Satu minggu terdiri dari tujuh hari” adalah fakta. “Membaca buku sangat menyenangkan” adalah opini karena berupa penilaian.",
+ steps:[["Baca kalimat","Perhatikan informasi yang disampaikan."],["Tanyakan apakah bisa dibuktikan","Data atau kejadian yang dapat diperiksa biasanya fakta."],["Cari pendapat pribadi","Kata seperti menurutku, paling bagus, atau menyenangkan sering menunjukkan opini."],["Pilih jawaban","Pastikan sesuai isi kalimat, bukan tebakan."]],
+ remember:"Fakta dapat diperiksa kebenarannya, sedangkan opini mengandung pendapat atau penilaian.",
+ q:"Manakah kalimat opini?",opts:["Indonesia merdeka pada 1945","Satu minggu ada tujuh hari","Menurutku membaca itu menyenangkan","Air membeku pada suhu 0°C dalam kondisi standar"],c:2,why:"Kata “menurutku” menunjukkan pendapat pribadi."
+ };
+ if(/keliling|luas/i.test(t))return{
+ intro:"Keliling adalah panjang garis di sekeliling bangun. Luas adalah ukuran daerah di dalam bangun.",
+ example:"Persegi panjang panjangnya 6 cm dan lebarnya 3 cm. Luas = 6 × 3 = 18 cm².",
+ steps:[["Perhatikan pertanyaan","Tentukan apakah yang dicari keliling atau luas."],["Catat ukuran","Tulis panjang dan lebar yang diketahui."],["Pilih cara","Luas persegi panjang = panjang × lebar. Keliling = 2 × (panjang + lebar)."],["Hitung dan cek satuan","Luas memakai cm², sedangkan keliling memakai cm."]],
+ remember:"Luas mengukur bagian dalam. Keliling mengukur batas bagian luar.",
+ q:"Persegi panjang memiliki panjang 7 cm dan lebar 4 cm. Berapa luasnya?",opts:["11 cm²","22 cm","28 cm²","28 cm"],c:2,why:"Luas = panjang × lebar = 7 × 4 = 28 cm²."
+ };
+ if(/rantai makanan|ekosistem/i.test(t))return{
+ intro:"Ekosistem adalah hubungan antara makhluk hidup dan lingkungannya. Rantai makanan menunjukkan perpindahan energi melalui proses makan dan dimakan.",
+ example:"Rumput → belalang → katak. Belalang memakan rumput dan katak memakan belalang.",
+ steps:[["Cari tumbuhan","Tumbuhan biasanya menjadi produsen karena dapat membuat makanannya sendiri."],["Ikuti panah","Panah menunjukkan arah perpindahan energi."],["Periksa makanan hewan","Hewan yang makan tumbuhan menjadi konsumen tingkat pertama." ]],
+ remember:"Produsen membuat makanan sendiri. Konsumen memperoleh energi dengan memakan organisme lain.",
+ q:"Dalam rantai rumput → belalang → katak, produsen adalah ...",opts:["Rumput","Belalang","Katak","Semua sama"],c:0,why:"Rumput dapat membuat makanannya sendiri melalui fotosintesis, sehingga disebut produsen."
+ };
+ if(/kecepatan/i.test(t))return{
+ intro:"Kecepatan menjelaskan seberapa jauh jarak yang ditempuh dalam waktu tertentu.",
+ example:"Mobil menempuh 100 km selama 2 jam. Kecepatan rata-ratanya 100 ÷ 2 = 50 km/jam.",
+ steps:[["Catat jarak dan waktu","Pastikan satuannya jelas."],["Bagi jarak dengan waktu","Kecepatan = jarak ÷ waktu."],["Tulis satuan","Misalnya kilometer per jam (km/jam)."],["Cek hasil","Kecepatan 50 km/jam selama 2 jam berarti menempuh 100 km."]],
+ remember:"Kecepatan = jarak ÷ waktu.",
+ q:"Jarak 120 km ditempuh selama 3 jam. Berapa kecepatan rata-ratanya?",opts:["30 km/jam","40 km/jam","60 km/jam","360 km/jam"],c:1,why:"Kecepatan = 120 ÷ 3 = 40 km/jam."
+ };
+ return{
+ intro:`Materi ${t} dipelajari dengan memahami konsepnya, mencari informasi penting, lalu mencoba contoh yang sederhana.`,
+ example:`Dalam mempelajari ${t}, mulailah dari contoh yang dekat dengan kehidupan sehari-hari. Setelah paham, coba gunakan konsepnya pada situasi baru.`,
+ steps:[["Pahami pertanyaan","Baca soal perlahan dan cari apa yang diminta."],["Tandai informasi penting","Cari kata kunci, angka, atau fakta yang membantu menjawab."],["Pilih cara","Gunakan konsep yang paling sesuai dengan pertanyaan."],["Periksa jawaban","Pastikan jawaban benar-benar menjawab pertanyaan."]],
+ remember:"Jangan buru-buru menghafal. Pahami dulu arti konsep, lalu gunakan contoh untuk mengingatnya.",
+ q:`Apa langkah awal yang baik saat mempelajari ${t}?`,
+ opts:["Langsung menebak jawaban","Membaca soal dan memahami pertanyaan","Mengabaikan informasi soal","Memilih jawaban terpanjang"],c:1,why:"Memahami pertanyaan membantu kita mengetahui informasi apa yang dibutuhkan dan cara apa yang sesuai."
+ };
+}
+function openLesson(t){
+ currentTopic=t;const d=lessonData(t);hide();$("lesson").classList.remove("hidden");
+ $("lessonLabel").textContent=`${state.level} • KELAS ${state.grade} • ${state.subject}`;
+ $("lessonTitle").textContent=t;$("intro").textContent=d.intro;$("example").textContent=d.example;$("remember").textContent=d.remember;
+ $("steps").innerHTML=d.steps.map((s,i)=>`<div class="step"><div class="num">${i+1}</div><div><b>${s[0]}</b><br>${s[1]}</div></div>`).join("");
+ $("practiceQuestion").textContent=d.q;$("practiceOptions").innerHTML=d.opts.map((o,i)=>`<button class="option" onclick="answerPractice(${i},${d.c},${JSON.stringify(d.why).replace(/"/g,'&quot;')})">${String.fromCharCode(65+i)}. ${o}</button>`).join("");
+ $("practiceFeedback").classList.add("hidden");$("retry").classList.add("hidden");window.scrollTo(0,0);
+}
+function answerPractice(i,c,why){
+ const opts=[...$("practiceOptions").querySelectorAll("button")];
+ opts.forEach((b,j)=>{b.disabled=true;if(j===c)b.classList.add("correct");if(j===i&&i!==c)b.classList.add("wrong")});
+ if(i===c)state.right++;save();$("practiceFeedback").textContent=(i===c?"Benar! ":"Belum tepat. ")+why;$("practiceFeedback").classList.remove("hidden");$("retry").classList.remove("hidden");
+}
+function markDone(){
+ const key=`${state.level}-${state.grade}-${state.subject}-${currentTopic}`;
+ if(!state.done.includes(key))state.done.push(key);
+ save();alert("Materi ditandai selesai! Progres tersimpan di perangkat ini.");home();
+}
+function searchLesson(){
+ const q=$("search").value.trim().toLowerCase();let result=[];
+ Object.entries(topicSets).forEach(([s,topics])=>topics.forEach(t=>{if((t+" "+s).toLowerCase().includes(q)&&q)result.push({s,t})}));
+ $("searchResults").innerHTML=!q?'<p class="muted">Ketik nama materi yang ingin dicari.</p>':result.length?result.slice(0,20).map(x=>`<button class="topic" onclick="state.subject=${JSON.stringify(x.s).replace(/"/g,'&quot;')};openLesson(${JSON.stringify(x.t).replace(/"/g,'&quot;')})">${x.t} <span>→</span></button>`).join(""):'<p class="muted">Materi belum ditemukan. Coba kata yang lebih singkat.</p>';
+}
+const iqQuestions=[
+ {q:"2, 4, 6, 8, ... angka berikutnya?",a:["9","10","12","14"],c:1,w:"Setiap angka bertambah 2. Jadi 8 + 2 = 10."},
+ {q:"Mana yang berbeda dari kelompok ini?",a:["Kucing","Kelinci","Kambing","Kursi"],c:3,w:"Kursi adalah benda, sedangkan yang lain adalah hewan."},
+ {q:"Semua bunga perlu air. Mawar adalah bunga. Maka mawar ...",a:["Tidak perlu air","Perlu air","Pasti merah","Bukan tumbuhan"],c:1,w:"Mawar termasuk bunga. Berdasarkan informasi soal, mawar perlu air."},
+ {q:"1, 3, 6, 10, ... angka berikutnya?",a:["12","13","14","15"],c:3,w:"Selisihnya +2, +3, +4, lalu +5. Jadi 10 + 5 = 15."},
+ {q:"Hari ini Selasa. Dua hari setelah besok adalah ...",a:["Rabu","Kamis","Jumat","Sabtu"],c:2,w:"Besok Rabu. Satu hari setelah besok Kamis, dua hari setelah besok Jumat."},
+ {q:"Buku lebih berat daripada pensil. Pensil lebih berat daripada penghapus. Yang paling ringan adalah ...",a:["Buku","Pensil","Penghapus","Tidak diketahui"],c:2,w:"Urutan dari berat ke ringan adalah buku, pensil, lalu penghapus."},
+ {q:"A, C, E, G, ... huruf berikutnya?",a:["H","I","J","K"],c:1,w:"Pola melewati satu huruf: A, C, E, G, I."},
+ {q:"Ada 3 kotak. Setiap kotak berisi 2 bola. Berapa jumlah bola?",a:["5","6","8","9"],c:1,w:"3 kotak × 2 bola per kotak = 6 bola."},
+ {q:"Jika tombol ditekan, lampu menyala. Tombol ditekan. Maka ...",a:["Lampu menyala","Lampu pasti rusak","Tombol hilang","Tidak ada kesimpulan"],c:0,w:"Aturan pada soal menyatakan bahwa tombol yang ditekan membuat lampu menyala."},
+ {q:"Mana angka yang tidak sesuai pola: 5, 10, 15, 21, 25?",a:["5","10","21","25"],c:2,w:"Polanya bertambah 5: 5, 10, 15, 20, 25. Jadi 21 tidak sesuai."}
+];
+function openIQ(){hide();$("iq").classList.remove("hidden");$("iqStart").classList.remove("hidden");$("iqQuiz").classList.add("hidden");$("iqResult").classList.add("hidden");window.scrollTo(0,0)}
+function startIQ(){state.iqIndex=0;state.iqScore=0;$("iqStart").classList.add("hidden");$("iqResult").classList.add("hidden");$("iqQuiz").classList.remove("hidden");renderIQ()}
+function renderIQ(){
+ const q=iqQuestions[state.iqIndex];
+ $("iqQuiz").innerHTML=`<div class="muted">SOAL ${state.iqIndex+1} DARI ${iqQuestions.length} • Skor: ${state.iqScore}</div><div class="progress"><span style="width:${state.iqIndex/iqQuestions.length*100}%"></span></div><h3>${q.q}</h3>${q.a.map((a,i)=>`<button class="option" onclick="answerIQ(${i})">${String.fromCharCode(65+i)}. ${a}</button>`).join("")}<div id="iqFeedback" class="feedback hidden"></div><button id="iqNext" class="primary hidden" onclick="nextIQ()">Soal berikutnya →</button>`;
+}
+function answerIQ(i){
+ const q=iqQuestions[state.iqIndex];
+ $("iqQuiz").querySelectorAll(".option").forEach((b,j)=>{b.disabled=true;if(j===q.c)b.classList.add("correct");if(j===i&&i!==q.c)b.classList.add("wrong")});
+ if(i===q.c)state.iqScore++;
+ $("iqFeedback").textContent=q.w;$("iqFeedback").classList.remove("hidden");$("iqNext").classList.remove("hidden");
+}
+function nextIQ(){
+ state.iqIndex++;
+ if(state.iqIndex<iqQuestions.length){renderIQ();return}
+ state.iq=state.iqScore;save();$("iqQuiz").classList.add("hidden");$("iqResult").classList.remove("hidden");
+ $("iqResult").innerHTML=`<h2>Skor kamu: ${state.iqScore}/10</h2><div class="progress"><span style="width:${state.iqScore*10}%"></span></div><p>${state.iqScore>=8?"Hebat! Kamu teliti melihat pola.":state.iqScore>=5?"Bagus! Terus berlatih agar makin terbiasa.":"Jangan menyerah. Coba periksa angka dan petunjuk satu per satu."}</p><p class="muted">Ini skor latihan logika, bukan hasil IQ resmi.</p><button class="primary" onclick="startIQ()">Ulangi tes</button><button onclick="home()">Beranda</button>`;
+}
+function resetProgress(){if(confirm("Hapus semua progres belajar dan skor?")){state.done=[];state.right=0;state.iq=0;save()}}
+$("audioFile").addEventListener("change",e=>{const f=e.target.files[0];if(f){$("audio").src=URL.createObjectURL(f);$("audio").classList.remove("hidden");$("audio").load()}});
+renderLevels();renderStats();
+</script>
+</body>
+</html>
+</body>
+<!-- KALKULATOR & TIMER HEY EDUKASI -->
+<style>
+.tools-box{background:#151d33;border:1px solid #293653;border-radius:16px;padding:16px;margin:14px 0;color:#f5f7ff}
+.tools-box h2{margin-top:0;font-size:20px}
+.tools-box input,.tools-box button{box-sizing:border-box;border-radius:9px;padding:11px;border:1px solid #354566}
+.tools-box input{background:#0b1020;color:white;width:100%;margin:5px 0 10px}
+.tools-box button{background:#6685ff;color:white;font-weight:bold;cursor:pointer;margin:3px}
+.tools-box button:active{opacity:.7}
+.calc-display{font-size:25px;text-align:right;background:#0b1020;padding:15px;border-radius:10px;margin-bottom:10px;overflow-wrap:anywhere;min-height:30px}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.calc-grid button{margin:0;font-size:17px}
+.tool-result{font-size:22px;font-weight:bold;text-align:center;margin:12px 0}
+</style>
+
+<section class="tools-box">
+  <h2>🧮 Kalkulator</h2>
+  <div id="calcDisplay" class="calc-display">0</div>
+  <div class="calc-grid">
+    <button onclick="calcClear()">C</button>
+    <button onclick="calcAdd('(')">(</button>
+    <button onclick="calcAdd(')')">)</button>
+    <button onclick="calcAdd('/')">÷</button>
+    <button onclick="calcAdd('7')">7</button>
+    <button onclick="calcAdd('8')">8</button>
+    <button onclick="calcAdd('9')">9</button>
+    <button onclick="calcAdd('*')">×</button>
+    <button onclick="calcAdd('4')">4</button>
+    <button onclick="calcAdd('5')">5</button>
+    <button onclick="calcAdd('6')">6</button>
+    <button onclick="calcAdd('-')">−</button>
+    <button onclick="calcAdd('1')">1</button>
+    <button onclick="calcAdd('2')">2</button>
+    <button onclick="calcAdd('3')">3</button>
+    <button onclick="calcAdd('+')">+</button>
+    <button onclick="calcAdd('0')">0</button>
+    <button onclick="calcAdd('.')">.</button>
+    <button onclick="calcBack()">⌫</button>
+    <button onclick="calcEqual()">=</button>
+  </div>
+</section>
+
+<section class="tools-box">
+  <h2>⏱️ Timer Belajar</h2>
+  <p>Masukkan waktu dalam menit dan detik.</p>
+  <div style="display:flex;gap:8px">
+    <div style="flex:1">
+      <label for="timerMin">Menit</label>
+      <input id="timerMin" type="number" min="0" max="999" value="5">
+    </div>
+    <div style="flex:1">
+      <label for="timerSec">Detik</label>
+      <input id="timerSec" type="number" min="0" max="59" value="0">
+    </div>
+  </div>
+  <div id="timerDisplay" class="tool-result">05:00</div>
+  <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:5px">
+    <button id="timerStart" onclick="timerStart()">▶ Mulai</button>
+    <button onclick="timerPause()">⏸ Jeda</button>
+    <button onclick="timerReset()">↻ Ulang</button>
+  </div>
+  <p id="timerMessage" style="text-align:center;color:#a4b1d0"></p>
+</section>
+
+<script>
+/* KALKULATOR */
+let calcExpression = "";
+
+function calcRender(){
+  document.getElementById("calcDisplay").textContent =
+    calcExpression || "0";
+}
+
+function calcAdd(value){
+  if(calcExpression.length >= 100) return;
+  calcExpression += value;
+  calcRender();
+}
+
+function calcClear(){
+  calcExpression = "";
+  calcRender();
+}
+
+function calcBack(){
+  calcExpression = calcExpression.slice(0,-1);
+  calcRender();
+}
+
+function calcEqual(){
+  try{
+    if(!calcExpression.trim()) return;
+
+    // Hanya izinkan angka dan operator matematika.
+    if(!/^[0-9+\-*/().\s]+$/.test(calcExpression)){
+      throw new Error("Input tidak valid");
+    }
+
+    const result = Function(
+      '"use strict";return (' + calcExpression + ')'
+    )();
+
+    if(typeof result !== "number" || !Number.isFinite(result)){
+      throw new Error("Perhitungan tidak valid");
+    }
+
+    calcExpression = String(
+      Math.round((result + Number.EPSILON) * 1e10) / 1e10
+    );
+    calcRender();
+  }catch(error){
+    document.getElementById("calcDisplay").textContent =
+      "Periksa hitungan!";
+    calcExpression = "";
+  }
+}
+
+/* TIMER MUNDUR */
+let timerRemaining = 300;
+let timerInterval = null;
+
+function timerFormat(seconds){
+  const m = Math.floor(seconds/60);
+  const s = seconds%60;
+  return String(m).padStart(2,"0")+":"+
+         String(s).padStart(2,"0");
+}
+
+function timerRender(){
+  document.getElementById("timerDisplay").textContent =
+    timerFormat(timerRemaining);
+}
+
+function timerReadInputs(){
+  const min = Number(document.getElementById("timerMin").value);
+  const sec = Number(document.getElementById("timerSec").value);
+
+  if(!Number.isInteger(min) || !Number.isInteger(sec) ||
+     min < 0 || min > 999 || sec < 0 || sec > 59 ||
+     min*60+sec <= 0){
+    document.getElementById("timerMessage").textContent =
+      "Masukkan waktu yang valid lebih dari 0 detik.";
+    return false;
+  }
+
+  timerRemaining = min*60+sec;
+  timerRender();
+  document.getElementById("timerMessage").textContent = "";
+  return true;
+}
+
+function timerStart(){
+  if(timerInterval !== null) return;
+
+  if(timerRemaining <= 0 && !timerReadInputs()) return;
+
+  document.getElementById("timerMessage").textContent =
+    "Timer sedang berjalan…";
+
+  timerInterval = setInterval(function(){
+    timerRemaining--;
+    timerRender();
+
+    if(timerRemaining <= 0){
+      clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById("timerMessage").textContent =
+        "🎉 Waktu habis! Istirahat sebentar.";
+      timerBeep();
+    }
+  },1000);
+}
+
+function timerPause(){
+  if(timerInterval !== null){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    document.getElementById("timerMessage").textContent =
+      "Timer dijeda.";
+  }
+}
+
+function timerReset(){
+  timerPause();
+  if(!timerReadInputs()){
+    timerRemaining = 0;
+    timerRender();
+  }
+  document.getElementById("timerMessage").textContent = "";
+}
+
+function timerBeep(){
+  try{
+    const AudioCtx = window.AudioContext ||
+                     window.webkitAudioContext;
+    if(!AudioCtx) return;
+
+    const ctx = new AudioCtx();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.frequency.value = 880;
+    gain.gain.value = 0.15;
+    oscillator.start();
+
+    setTimeout(function(){
+      oscillator.stop();
+      ctx.close();
+    },500);
+  }catch(error){}
+}
+
+document.getElementById("timerMin").addEventListener("change",function(){
+  if(timerInterval === null) timerReadInputs();
+});
+document.getElementById("timerSec").addEventListener("change",function(){
+  if(timerInterval === null) timerReadInputs();
+});
+
+calcRender();
+timerRender();
+</script>
+</style>
+/* ===== HEY EDUKASI: GUI FULL WIDTH ===== */
+
+.edu-tools{
+  --bg:#0b1020;
+  --panel:#151d33;
+  --line:#293653;
+  --blue:#6685ff;
+  --purple:#a56bff;
+  --text:#f5f7ff;
+  --muted:#a4b1d0;
+
+  width:calc(100vw - 24px);
+  max-width:760px;
+  position:relative;
+  left:50%;
+  transform:translateX(-50%);
+  margin:24px 0;
+  padding:18px;
+  border:1px solid #293653;
+  border-radius:22px;
+  background:#0b1020;
+  color:#f5f7ff;
+  box-shadow:0 12px 35px #05081430;
+  font-family:system-ui,sans-serif;
+}
+
+.edu-tools *{
+  box-sizing:border-box;
+}
+
+.edu-head{
+  padding:4px 2px 16px;
+  margin:0;
+}
+
+.edu-head h2{
+  font-size:24px;
+  font-weight:800;
+  color:#f5f7ff;
+  margin:0 0 7px;
+}
+
+.edu-head p{
+  color:#a4b1d0;
+  font-size:13px;
+  line-height:1.6;
+  margin:0;
+}
+
+.edu-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  padding:6px;
+  background:#080d1a;
+  border:1px solid #293653;
+  border-radius:14px;
+  margin-bottom:14px;
+}
+
+.edu-tab{
+  width:100%;
+  min-height:44px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#a4b1d0;
+  font-size:14px;
+  font-weight:700;
+}
+
+.edu-tab.active{
+  background:linear-gradient(110deg,#6685ff,#a56bff);
+  color:#fff;
+}
+
+.edu-panel{
+  width:100%;
+  padding:18px;
+  border:1px solid #293653;
+  border-radius:17px;
+  background:#151d33;
+}
+
+.edu-panel[hidden]{
+  display:none !important;
+}
+
+.edu-label{
+  color:#a4b1d0;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1px;
+}
+
+.edu-display{
+  width:100%;
+  min-height:100px;
+  padding:16px;
+  margin:12px 0 16px;
+  border:1px solid #293653;
+  border-radius:13px;
+  background:#0b1020;
+}
+
+.edu-result{
+  color:#fff;
+  font-size:clamp(30px,7vw,40px);
+  font-weight:800;
+  overflow-wrap:anywhere;
+}
+
+.edu-keys{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
+
+.edu-key{
+  width:100%;
+  min-width:0;
+  min-height:52px;
+  border-radius:12px;
+  font-size:18px;
+  background:#202b46;
+  color:#f5f7ff;
+  border:1px solid #293653;
+  touch-action:manipulation;
+}
+
+.edu-key.op{
+  background:#27365d;
+  color:#c7d2ff;
+}
+
+.edu-key.special{
+  background:#34264f;
+  color:#e0caff;
+}
+
+.edu-key.equal{
+  background:linear-gradient(120deg,#6685ff,#a56bff);
+  color:white;
+  border:0;
+}
+
+.edu-note{
+  color:#a4b1d0;
+  font-size:12px;
+  line-height:1.6;
+}
+
+.edu-clock{
+  color:#fff;
+  font-size:clamp(48px,12vw,68px);
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+
+.edu-field input{
+  width:100%;
+  min-height:46px;
+  background:#0b1020;
+  color:#fff;
+  border:1px solid #354566;
+  border-radius:10px;
+  padding:10px;
+  font-size:16px;
+}
+
+.edu-btn{
+  min-height:45px;
+  border-radius:11px;
+  font-weight:700;
+  touch-action:manipulation;
+}
+
+.edu-btn.primary{
+  background:linear-gradient(120deg,#6685ff,#a56bff);
+  color:white;
+}
+
+.edu-status{
+  color:#a4b1d0;
+  line-height:1.6;
+}
+
+@media(max-width:480px){
+  .edu-tools{
+    width:calc(100vw - 16px);
+    padding:12px;
+    border-radius:17px;
+    margin:16px 0;
+  }
+
+  .edu-head h2{
+    font-size:22px;
+  }
+
+  .edu-panel{
+    padding:13px;
+  }
+
+  .edu-keys{
+    gap:6px;
+  }
+
+  .edu-key{
+    min-height:49px;
+    border-radius:10px;
+    font-size:17px;
+  }
+
+  .edu-actions{
+    gap:6px;
+  }
+
+  .edu-btn{
+    padding:10px 5px;
+    font-size:12px;
+  }
+}
